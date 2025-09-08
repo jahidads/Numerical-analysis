@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>Advanced Numbers Dashboard</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#a8edea,#fed6e3);
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-height:100vh;
+  margin:0;
+  padding-top:30px;
+}
+.container {
+  background:white;
+  padding:30px;
+  border-radius:15px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  width:480px;
+}
+h2 {color:#444;margin-bottom:20px;text-align:center;}
+.inputs {margin-bottom:15px;}
+.input-group {display:flex;justify-content:space-between;align-items:center;margin:8px 0;}
+label {flex:1;text-align:left;font-weight:bold;color:#555;}
+input {flex:1;padding:8px;margin-left:10px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;transition:box-shadow 0.3s;}
+input:focus {outline:none;box-shadow:0 0 8px rgba(76,175,239,0.7);}
+button {margin:10px 5px;padding:10px 20px;font-size:16px;cursor:pointer;border-radius:10px;border:none;color:white;background:linear-gradient(45deg,#4cafef,#0077cc);transition:all 0.3s;}
+button:hover {transform:scale(1.05);background:linear-gradient(45deg,#0077cc,#4cafef);}
+#result-area h3 {margin:8px 0;font-weight:bold;font-size:18px;opacity:0;transition:opacity 1s ease-in-out;}
+#result-area h3.show {opacity:1;}
+.ranking {margin-top:20px;text-align:left;}
+.bar-group {display:flex;align-items:center;margin:5px 0;}
+.bar {height:20px;border-radius:5px;margin-left:10px;transition:width 0.5s, transform 0.3s, background 0.3s;color:white;text-align:right;padding-right:5px;font-weight:bold;}
+.bar:hover {transform:scaleX(1.05) scaleY(1.1);}
+.control-buttons {margin:10px 0;display:flex;justify-content:space-around;flex-wrap:wrap;gap:5px;}
+@media (max-width:480px){
+  .container {width:90%;padding:20px;}
+  .input-group {flex-direction:column;align-items:flex-start;}
+  .input-group input {width:100%;margin-left:0;margin-top:5px;}
+  .control-buttons {flex-direction:column;gap:8px;}
+  button {width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>সংখ্যা বিশ্লেষক</h2>
+<div id="inputs" class="inputs"></div>
+
+<div class="control-buttons">
+<button onclick="addInput()">+ ইনপুট</button>
+<button onclick="removeInput()">- ইনপুট</button>
+<button onclick="generateRandom()">রেন্ডম সংখ্যা</button>
+<button onclick="showResults()">ফলাফল দেখাও</button>
+<button onclick="resetAll()">রিসেট সব</button>
+</div>
+
+<div id="result-area">
+  <h3 id="largest"></h3>
+  <h3 id="smallest"></h3>
+  <h3 id="sum"></h3>
+  <h3 id="average"></h3>
+</div>
+
+<div id="ranking" class="ranking"></div>
+</div>
+
+<script>
+const inputsContainer=document.getElementById("inputs");
+const rankingDiv=document.getElementById("ranking");
+const largestEl=document.getElementById("largest");
+const smallestEl=document.getElementById("smallest");
+const sumEl=document.getElementById("sum");
+const avgEl=document.getElementById("average");
+let inputCount=5;
+
+function createInput(id){
+  const div=document.createElement("div");
+  div.className="input-group";
+  div.id="group"+id;
+  div.innerHTML=`<label>সংখ্যা ${id}:</label><input type="number" id="num${id}">`;
+  inputsContainer.appendChild(div);
+}
+
+for(let i=1;i<=inputCount;i++) createInput(i);
+
+function addInput(){inputCount++;createInput(inputCount);}
+function removeInput(){if(inputCount>1){document.getElementById("group"+inputCount).remove();inputCount--;}}
+function generateRandom(){for(let i=1;i<=inputCount;i++)document.getElementById("num"+i).value=Math.floor(Math.random()*100)+1;}
+function resetAll(){for(let i=1;i<=inputCount;i++)document.getElementById("num"+i).value="";largestEl.classList.remove("show");smallestEl.classList.remove("show");sumEl.classList.remove("show");avgEl.classList.remove("show");rankingDiv.innerHTML="";}
+
+function showResults(){
+  largestEl.classList.remove("show");smallestEl.classList.remove("show");sumEl.classList.remove("show");avgEl.classList.remove("show");rankingDiv.innerHTML="";
+  let numbers=[];
+  for(let i=1;i<=inputCount;i++){
+    let val=document.getElementById("num"+i).value;
+    if(val===""||isNaN(val)){alert("সঠিক সংখ্যা লিখুন!");return;}
+    numbers.push({id:i,value:parseInt(val)});
+  }
+
+  // Largest
+  let largest=Math.max(...numbers.map(n=>n.value));
+  let displayed=0;
+  const step=Math.ceil(largest/50);
+  const interval=setInterval(()=>{
+    displayed+=step;
+    if(displayed>=largest){displayed=largest;clearInterval(interval);}
+    largestEl.innerText="সবচেয়ে বড় সংখ্যা: "+displayed;
+    largestEl.classList.add("show");
+  },20);
+
+  // Smallest
+  let smallest=Math.min(...numbers.map(n=>n.value));
+  let dispSmall=0;const stepSmall=Math.ceil(smallest/50);
+  const intSmall=setInterval(()=>{
+    dispSmall+=stepSmall;
+    if(dispSmall>=smallest){dispSmall=smallest;clearInterval(intSmall);}
+    smallestEl.innerText="সবচেয়ে ছোট সংখ্যা: "+dispSmall;
+    smallestEl.classList.add("show");
+  },20);
+
+  // Sum & Average
+  const total=numbers.reduce((acc,n)=>acc+n.value,0);
+  sumEl.innerText="মোট যোগফল: "+total;sumEl.classList.add("show");
+  avgEl.innerText="গড় সংখ্যা: "+(total/numbers.length).toFixed(2);avgEl.classList.add("show");
+
+  // Bar Chart (ascending)
+  const sorted=[...numbers].sort((a,b)=>a.value-b.value);
+  const maxValue=Math.max(...numbers.map(n=>n.value));
+  sorted.forEach(item=>{
+    const barGroup=document.createElement("div");barGroup.className="bar-group";
+    const label=document.createElement("span");label.innerText=`সংখ্যা ${item.id} (${((item.value/total)*100).toFixed(1)}%):`;
+    const bar=document.createElement("div");bar.className="bar";
+    const widthPercent=(item.value/maxValue)*100;
+    bar.style.width=widthPercent+"%";
+
+    // Rainbow color
+    const hue=Math.floor((item.value/maxValue)*360);
+    bar.style.background=`hsl(${hue},70%,50%)`;
+
+    bar.innerText=item.value;
+    barGroup.appendChild(label);
+    barGroup.appendChild(bar);
+    rankingDiv.appendChild(barGroup);
+  });
+}
+</script>
+</body>
+</html>
